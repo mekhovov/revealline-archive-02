@@ -1,45 +1,28 @@
 # RevealLine archive 02
 
-This expansion adds **v0.29.2, v0.30.0 and v0.31.0** to the existing archive. All canonical site and release-record bytes for **v0.27.0, v0.28.0, v0.29.0 and v0.29.1** stay identical. Each game retains its historical behavior. The archive index and routing metadata expand to include the added versions.
+This additive expansion adds **v0.32.0**. All canonical game, manifest, checksum, ownership and release-record bytes for the seven existing editions remain identical: v0.27.0, v0.28.0, v0.29.0, v0.29.1, v0.29.2, v0.30.0 and v0.31.0. Only the archive indexes and routing metadata change for those editions. Historical gameplay is preserved.
 
-The current game is at [RevealLine](https://mekhovov.github.io/revealline/). This repository hosts independently playable old editions at [archive 02](https://mekhovov.github.io/revealline-archive-02/releases/). Download ZIPs remain on their original GitHub Releases.
+The current game is at [RevealLine](https://mekhovov.github.io/revealline/); old editions remain independently playable at [archive 02](https://mekhovov.github.io/revealline-archive-02/releases/). ZIPs remain on their original GitHub Releases.
 
-## Exact inputs and capacity
+## Exact authority and capacity
 
-- Builder source: accepted main `f1a5d0cb4b13bc57f65c8892b81b2a405479f1e7`, with v0.34.0 package metadata.
-- Forty-one semantic release records, original tag objects and peeled commits are locked in `source-lock.json`.
-- Canonical artifact: **1,538 files / 583,885,534 bytes**, within the unchanged **800,000,000-byte** archive budget.
-- Eight hidden files: `.nojekyll` and each of seven sites' `.xonix-build.json`.
-- Expected inventory SHA256: `c61abc7495a060696ec0bac719537cc750cdcdca14b7667bc67fc519b9124b64`.
-- Source lock SHA256: `ac627ca655907fb1c3ce07dfb603c98e7a70dbba3c3ce5c57cd0501bd411b097`.
+- Original accepted infrastructure: `3af0d6b38060b7495085e0d4309370973e8ecb56`, whose tree equals reviewed `ca5c0e75bcad5766e449e20cba9b3d1a36803fdf`.
+- Current builder source: published v0.35 source `9747b3e86e43d4e66b1c7b4aea6e05b220bf3ad5`; all 42 semantic release records, tag objects and peeled commits are locked.
+- Canonical artifact: **1,777 files / 731,963,905 bytes**, leaving **68,036,095 bytes** below the unchanged **800,000,000-byte** archive budget.
+- Nine hidden files: `.nojekyll` and eight `.xonix-build.json` ownership files.
+- Expected inventory SHA256: `f56f2f1188a2bf62a2ec2d239236f7541c10f06c89297c0effd75f6f04a508ed`.
+- Source lock SHA256: `b69e05f36dab6f631e55f62eca46d81928262a2bf6eb8d913678b86d48bed0b4`.
+- Added edition source: `b37f5fc3ecbeedc06fa1fd13229a9b1864cb05af`, unchanged v0.32.0.
 
-The 1 GB published-site limit is documented by [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits). The existing, lower project budgets remain unchanged: 800 MB per archive and 950 MB for the main site. Old originals and downloadable distributions are preserved.
+The independent inventory is derived before assembly. Accepted archive inventory `c61abc7495a060696ec0bac719537cc750cdcdca14b7667bc67fc519b9124b64` supplies all seven old canonical site/record bodies. Accepted v0.35 main inventory `22f22b40196f1715bbe27de4165cbbdb45025af4c33eb01371583bc206a4ec0b` supplies v0.32 and the exact 42 release records. Fixed independent templates derive only five root, index, routing and marker files; the root HTML and marker remain identical. Exactly 1,535 existing bodies remain unchanged. Routing describes the full 42-edition history; the archive index lists eight editions.
 
-## Independent inventory authority
+## Reproduction and local verification
 
-The expected inventory is derived before assembly from two accepted public inventories. The prior archive inventory (`c8e3247fa6e93821e87146bf5f3480091714928039a121c5bd516ef575d994a2`) supplies all existing canonical site/release bytes. The complete v0.34 main inventory (`a053211458d1c85786e533373c5e84395b2bc3459f7f1aad00ede7c13ee284c7`) supplies the three added sites and all forty-one exact release records. Independent fixed templates derive only the five root, index, routing and marker files. The expected data does not come from self-hashing the assembled output.
+`tools/prepare.py` requires Node 22.22.2, exact builder Git blobs, unchanged release tags, the pinned allocation/inventory and a fresh output directory. The hosted default is unchanged: freshly archive every selected commit, check the frozen TAR digest and embedded commit, safely extract and validate every Git blob, then run each edition's own archived CLI. All eight manifest and ZIP hashes, full ZIP CRC/member bodies, loose bytes, checksums, ownership markers and finite public inventory must match before assembly.
 
-All records must equal the accepted public bytes and match original semantic tags. Full routing metadata describes the forty-one-edition history, while this archive's index lists only its seven editions.
+Local `--reuse-frozen-sites` requires `--frozen-root`. To avoid redundant large TAR/source copies, it compares each existing frozen TAR byte for byte with a fresh `git archive` stream, checks its frozen SHA256, and reads every bounded TAR member against its exact Git blob and executable mode without extracting another source tree. It then copies the existing site and performs all the same manifest, ZIP, loose-byte and canonical-inventory checks. This mode verifies frozen outputs; it does not claim a new CLI build. It refuses links, special files, extra empty directories, changed source bodies and missing/extra inventory. Tags and supplied frozen trees must remain identical after completion. Failed attempts are retained.
 
-| Edition | Exact original source |
-| --- | --- |
-| v0.27.0 | `562fc867c7aa64ffe727f55a561a6531371f0f47` |
-| v0.28.0 | `f79f3c56b0a3cd88ca4e98b7f31689398523da74` |
-| v0.29.0 | `f40e1d9ecf262ba94915ddc3fc05eda074058b7a` |
-| v0.29.1 | `90b974bfd733ccb11d74383e154467bd172b31d0` |
-| v0.29.2 | `d611f1429272ce402db6c38dde763bd3e15498cb` |
-| v0.30.0 | `da573579fa10f41830e5743b4f9e7e3991e7613a` |
-| v0.31.0 | `70c67e172ceb39947b442948add0d745b19f9a29` |
-
-## Reproduction and verification
-
-`tools/prepare.py` requires Node 22.22.2, an exact builder source tree, unchanged release tags, allocation and expected inventory, and a new output directory. It freshly archives each selected Git commit, validates the exact frozen TAR hash and embedded commit, safely extracts it and compares every source file to its Git blob.
-
-The hosted default rebuilds seven sites with their own archived CLIs. Local `--reuse-frozen-sites` instead copies already frozen sites after verifying the exact source TAR. It requires `--frozen-root`; it does not claim a new game build. Both modes validate manifest contents and totals, ZIP hash/CRC/member bytes, ownership markers, checksums, loose files and every accepted canonical inventory entry. Reuse refuses special files, symlinks and extra empty directories. Tags and supplied frozen trees must still match at completion. Failed attempts are preserved.
-
-All forty-one locked records are staged before `buildPages` executes, preventing its missing-release fallback from creating releases. Only seven sites are materialized. The process reads source Git objects, creates no tag or commit, and assembles a private output. Canonical sites contain every ordinary original site file except the duplicated `distribution.zip`; its unchanged checksum remains present.
-
-With infrastructure at `archive` and the exact source checkout at `source`:
+All 42 locked records are staged before the actual `buildPages` helper runs, preventing missing-record fallback. Only eight selected sites are materialized. Every original ordinary site file except the redundant `distribution.zip` is published; its exact checksum remains present. This preparation creates no game release or tag.
 
 ```sh
 python3 archive/tools/test-verify.py
@@ -47,14 +30,15 @@ python3 archive/tools/prepare.py --git-root source --builder-source source --out
 python3 archive/tools/verify-artifact.py /absolute/new/archive02/artifact
 ```
 
-For local verified frozen outputs, append `--frozen-root /absolute/original/releases --reuse-frozen-sites`. The hosted workflow uses actual archived-CLI rebuilds because checkout does not include ignored frozen outputs. Every artifact byte and the finite hidden set are verified before the pinned v5 Pages upload with hidden files included. Existing checkout/setup/deploy action major tags are retained.
+For local reuse, append `--frozen-root /absolute/original/releases --reuse-frozen-sites`. The hosted workflow retains the default archived CLI builds, pinned upload-pages-artifact v5 SHA, explicit hidden-file inclusion and existing checkout/setup/deploy action major tags. The source checkout uses the exact full SHA above.
 
-## Publication sequence
+## Acceptance and publication boundaries
 
-1. Review source, inventory authority, preservation checks and complete local artifact.
-2. Commit the logical expansion, open and merge a PR, then verify the resulting archive workflow and deployment under the user's standing release authorization. Archive-01 and existing game refs remain intact.
-3. Audit all 1,538 canonical public files for exact bodies and MIME, including hidden files, using bounded concurrency and preserving failures. Verify the new canonical entries, secondary pages, query/fragment, same-origin saves and new-scope offline operation through the browser.
-4. Only after canonical acceptance, adopt this allocation in the next source release. Main then creates HTML forwarders and retirement workers for the three newly archived editions while retaining their original release/manifest/checksum metadata.
-5. Verify the complete new main artifact and normal cached-worker migration. Never force service-worker takeover or clear player caches/data. Running old games retain their ordinary lifecycle.
+1. Review this infrastructure delta, independent inventory and complete verified local artifact.
+2. Deliver the additive archive change through a reviewed commit/PR and successful workflow/deployment. Preserve the existing archive ancestry and game tags.
+3. Audit all 1,777 canonical public paths, including nine hidden files, and reconcile all 1,535 preserved old bodies. Retain failed requests. Root separately checks the new canonical browser entry, query/fragment, ordinary saved context and actual offline outcome.
+4. Only after that explicit canonical acceptance may a successor main release adopt this allocation. Main bridge/retirement-worker regressions, normal cached-worker migration and full exact final artifact admission remain mandatory. Do not force service-worker takeover or clear caches/player data.
 
-The accepted v0.34 main artifact is **904,798,002 bytes**, leaving **45,201,998 bytes** below its existing cap. Replacing these three complete old sites with small bridges will recover most of their **287,178,671 bytes**; the exact next main artifact must still be measured before deployment. No installed-pack or offline budget changes, automatic eviction, or game completion claims follow from this infrastructure work.
+The prior archive expansion was accepted for **online preservation**, including v0.31 ordinary win and retained Collection. Root reported v0.31 offline preparation timed out and a legacy music v1-versus-existing-v3 warning; tabs were subsequently closed externally. Public offline/cold operation was not qualified and the cause was not established. Those historical limitations remain; this expansion does not change archived code or imply repaired offline behavior. Local byte checks alone do not qualify public browser, offline, physical controller or phone behavior.
+
+The accepted v0.35 main site is 780,633,089 bytes. This allocation is projected to free 148,029,207 main-site bytes while preserving old originals. The unchanged main cap is 950,000,000 bytes; the actual successor artifact must be measured. Installed-pack, managed-media and offline caps remain unchanged. No main allocation or public game integration is authorized by this preparation alone.

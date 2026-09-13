@@ -1,8 +1,8 @@
 {
   "format": "revealline-archive-source-lock.v1",
   "sourceRepository": "mekhovov/revealline",
-  "sourceCommit": "f1a5d0cb4b13bc57f65c8892b81b2a405479f1e7",
-  "currentVersion": "v0.34.0",
+  "sourceCommit": "9747b3e86e43d4e66b1c7b4aea6e05b220bf3ad5",
+  "currentVersion": "v0.35.0",
   "archiveRepository": "mekhovov/revealline-archive-02",
   "archiveId": "archive-02",
   "selectedVersions": [
@@ -12,14 +12,15 @@
     "v0.29.1",
     "v0.29.2",
     "v0.30.0",
-    "v0.31.0"
+    "v0.31.0",
+    "v0.32.0"
   ],
   "node": "v22.22.2",
   "archiveBudgetBytes": 800000000,
-  "sourceInventorySha256": "a053211458d1c85786e533373c5e84395b2bc3459f7f1aad00ede7c13ee284c7",
-  "priorArchiveInventorySha256": "c8e3247fa6e93821e87146bf5f3480091714928039a121c5bd516ef575d994a2",
-  "allocationSha256": "f63d4714659a642478f87c451896b613dfd8773347b071cf0784312aca7ed8d7",
-  "expectedInventorySha256": "c61abc7495a060696ec0bac719537cc750cdcdca14b7667bc67fc519b9124b64",
+  "sourceInventorySha256": "22f22b40196f1715bbe27de4165cbbdb45025af4c33eb01371583bc206a4ec0b",
+  "priorArchiveInventorySha256": "c61abc7495a060696ec0bac719537cc750cdcdca14b7667bc67fc519b9124b64",
+  "allocationSha256": "f82060fd3efccbf593961d3923cdeae9be0e04484bcd2b19c115dbc34a277a1a",
+  "expectedInventorySha256": "f56f2f1188a2bf62a2ec2d239236f7541c10f06c89297c0effd75f6f04a508ed",
   "contracts": [
     {
       "path": "scripts/build-pages.mjs",
@@ -43,15 +44,15 @@
     },
     {
       "path": "scripts/pages-archives.json",
-      "sha256": "5ca22abdd5213f66b43571cafca3d0b4ddb36e627c2838c359bb1ae28e359f95"
+      "sha256": "f63d4714659a642478f87c451896b613dfd8773347b071cf0784312aca7ed8d7"
     },
     {
       "path": "package.json",
-      "sha256": "70d0f6d14aea0cd14173d0babb77b566095025ad45178271abb348c7378df9cf"
+      "sha256": "43f038196fa74a397339cc0bdb481f16c79eb9b69adfabafe99d15e6c3a45bef"
     },
     {
       "path": "package-lock.json",
-      "sha256": "c167ce9cc0767b71276d5352df5e5f041897c1e9f788532927cefd8989684160"
+      "sha256": "5ab2a09baaaaa74bb37eff935d1f267604d94a3c028758a658a84c606c747a8f"
     }
   ],
   "releases": [
@@ -382,6 +383,14 @@
       "recordUtf8": "{\n  \"formatVersion\": 1,\n  \"version\": \"v0.34.0\",\n  \"sourceRevision\": \"ef1cc41553b7f8c4b1de0156b7921569b0d71f60\",\n  \"sourceArchiveSha256\": \"49d3b50962f26848abb2d009ba022cda0d16edcccc4444ae3e810b8a51e74d1d\",\n  \"distributionSha256\": \"582cab9343e24cc60de45b7ff95477698adca29200ad7e306c91502c12393bea\",\n  \"manifestSha256\": \"49595259a7fea9dd9f4988a9304356d0544c6fc0699dbb0d928aaa288b98e1ef\",\n  \"play\": \"v0.34.0/site/game/\",\n  \"download\": \"v0.34.0/site/distribution.zip\"\n}\n",
       "recordBytes": 465,
       "recordSha256": "19899e6ad66b9d69759da47035e6d3357c955d5c47b4a0cb18fb2af0aa61ed33"
+    },
+    {
+      "version": "v0.35.0",
+      "tagObject": "dc612f49b844c65895b75f8ddcd47543077a715f",
+      "commit": "9747b3e86e43d4e66b1c7b4aea6e05b220bf3ad5",
+      "recordUtf8": "{\n  \"formatVersion\": 1,\n  \"version\": \"v0.35.0\",\n  \"sourceRevision\": \"9747b3e86e43d4e66b1c7b4aea6e05b220bf3ad5\",\n  \"sourceArchiveSha256\": \"c5bdc9775b3cb5097cb42d83bc77030eeb36435f97ebea93172049ce00b959d8\",\n  \"distributionSha256\": \"3558ded7a8235b9ac708c71ec7fea169bb5d71f324014b8e4ccdbfa9b3bd3adb\",\n  \"manifestSha256\": \"57082613b02820815ac91bd18d5c31ad8309a7f78fd3e59f898c8c6f41a03496\",\n  \"play\": \"v0.35.0/site/game/\",\n  \"download\": \"v0.35.0/site/distribution.zip\"\n}\n",
+      "recordBytes": 465,
+      "recordSha256": "c4361b42bb2dc6e0a3b35db4a4ce5b9c01b2385d0ab62b9a4e8f179ec824a3ad"
     }
   ]
 }

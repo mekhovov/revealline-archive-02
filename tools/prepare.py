@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify seven immutable sites and assemble a strictly pinned archive; never freeze or tag."""
+"""Verify eight immutable sites and assemble a strictly pinned archive; never freeze or tag."""
 import argparse,hashlib,json,os,re,shutil,stat,subprocess,tarfile,zipfile
 from pathlib import Path,PurePosixPath
 REPO=Path(__file__).resolve().parents[1]
@@ -36,6 +36,51 @@ def copy_frozen_site(original,site):
 def write(p,value):
  p.parent.mkdir(parents=True,exist_ok=True)
  with p.open('x') as f:json.dump(value,f,indent=2,ensure_ascii=False);f.write('\n')
+def verify_tar_members(tarPath,commit,entries):
+ """Verify bounded original TAR bodies against Git blobs without extracting another tree."""
+ seen=set();files=set();total=0
+ with tarfile.open(tarPath,'r:') as ar:
+  require(ar.pax_headers.get('comment')==commit,'TAR commit differs')
+  for m in ar:
+   key=str(safe(m.name.rstrip('/') if m.isdir() else m.name))
+   require(key not in seen,'Duplicate TAR path');seen.add(key)
+   require(len(seen)<20000,'TAR aggregate bound')
+   require(m.isfile() or m.isdir(),'TAR special/link')
+   if m.isdir():continue
+   require(0<=m.size<=64*1024*1024,'TAR member bound');total+=m.size
+   require(total<=1024**3,'TAR aggregate bound')
+   require(key in entries,'Unexpected TAR source member')
+   mode,oid=entries[key];require(bool(m.mode&0o111)==(mode=='100755'),'TAR executable mode differs')
+   b=ar.extractfile(m).read();require(len(b)==m.size,'Truncated TAR')
+   require(hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()==oid,'TAR source blob differs')
+   files.add(key)
+ require(files==set(entries),'Missing TAR source member')
+ return {'files':len(files),'bytes':total}
+def verify_frozen_source(root,tarPath,commit,expectedSha256):
+ """The explicit local reuse mode still requires exact freshly streamed git-archive bytes."""
+ require(stat.S_ISREG(tarPath.lstat().st_mode),'Non-regular frozen source TAR')
+ process=subprocess.Popen(['git','archive','--format=tar',commit],cwd=root,stdout=subprocess.PIPE)
+ digest=hashlib.sha256()
+ try:
+  with tarPath.open('rb') as original:
+   while True:
+    b=process.stdout.read(1024*1024)
+    require(original.read(len(b))==b,'Frozen source TAR differs from fresh Git stream')
+    if not b:
+     require(original.read(1)==b'','Frozen source TAR has extra bytes');break
+    digest.update(b)
+  require(process.wait()==0,'Git archive failed')
+ finally:
+  process.stdout.close()
+  if process.poll() is None:process.kill()
+  process.wait()
+ require(digest.hexdigest()==expectedSha256,'Fresh source TAR differs')
+ entries={}
+ for entry in filter(None,subprocess.check_output(['git','ls-tree','-rz',commit],cwd=root).split(b'\0')):
+  meta,name=entry.split(b'\t',1);mode,kind,oid=meta.split();name=name.decode();safe(name)
+  require(kind==b'blob' and mode in (b'100644',b'100755'),'Unsupported Git member')
+  require(name not in entries,'Duplicate Git source member');entries[name]=(mode.decode(),oid.decode())
+ return verify_tar_members(tarPath,commit,entries)
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('--git-root',required=True);ap.add_argument('--builder-source',required=True);ap.add_argument('--out',required=True);ap.add_argument('--frozen-root');ap.add_argument('--reuse-frozen-sites',action='store_true');a=ap.parse_args();require(not a.reuse_frozen_sites or a.frozen_root,'Frozen reuse requires --frozen-root')
  root=Path(a.git_root).resolve();source=Path(a.builder_source).resolve();out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
@@ -75,21 +120,24 @@ def main():
   (target/'release.json').write_bytes(recordRaw)
   if r['version'] not in selected:continue
   v=r['version'];work=out/v;work.mkdir();tarPath=work/'source.tar'
-  with tarPath.open('xb') as stream:subprocess.run(['git','archive','--format=tar',r['commit']],cwd=root,stdout=stream,check=True)
-  raw=tarPath.read_bytes();require(H(raw)==record['sourceArchiveSha256'],'Fresh source TAR differs')
-  if frozen:require(raw==(frozen/v/'source.tar').read_bytes(),'Frozen source TAR differs')
-  extracted=work/'source';extracted.mkdir();seen=set();total=0
-  with tarfile.open(tarPath,'r:') as ar:
-   require(ar.pax_headers.get('comment')==r['commit'],'TAR commit differs')
-   for m in ar:
-    p=safe(m.name.rstrip('/') if m.isdir() else m.name);key=str(p);require(key not in seen,'Duplicate TAR path');seen.add(key)
-    require(m.isfile() or m.isdir(),'TAR special/link')
-    if m.isdir():continue
-    require(0<=m.size<=64*1024*1024,'TAR member bound');total+=m.size;require(total<=1024**3 and len(seen)<20000,'TAR aggregate bound')
-    b=ar.extractfile(m).read();require(len(b)==m.size,'Truncated TAR');dest=extracted/p;dest.parent.mkdir(parents=True,exist_ok=True)
-    with dest.open('xb') as stream:stream.write(b)
-    dest.chmod(m.mode&0o777)
-  sourceTree=git_files_equal(extracted,r['commit'])
+  if a.reuse_frozen_sites:
+   sourceTree=verify_frozen_source(root,frozen/v/'source.tar',r['commit'],record['sourceArchiveSha256'])
+  else:
+   with tarPath.open('xb') as stream:subprocess.run(['git','archive','--format=tar',r['commit']],cwd=root,stdout=stream,check=True)
+   raw=tarPath.read_bytes();require(H(raw)==record['sourceArchiveSha256'],'Fresh source TAR differs')
+   if frozen:require(raw==(frozen/v/'source.tar').read_bytes(),'Frozen source TAR differs')
+   extracted=work/'source';extracted.mkdir();seen=set();total=0
+   with tarfile.open(tarPath,'r:') as ar:
+    require(ar.pax_headers.get('comment')==r['commit'],'TAR commit differs')
+    for m in ar:
+     p=safe(m.name.rstrip('/') if m.isdir() else m.name);key=str(p);require(key not in seen,'Duplicate TAR path');seen.add(key)
+     require(m.isfile() or m.isdir(),'TAR special/link')
+     if m.isdir():continue
+     require(0<=m.size<=64*1024*1024,'TAR member bound');total+=m.size;require(total<=1024**3 and len(seen)<20000,'TAR aggregate bound')
+     b=ar.extractfile(m).read();require(len(b)==m.size,'Truncated TAR');dest=extracted/p;dest.parent.mkdir(parents=True,exist_ok=True)
+     with dest.open('xb') as stream:stream.write(b)
+     dest.chmod(m.mode&0o777)
+   sourceTree=git_files_equal(extracted,r['commit'])
   site=target/'site'
   if a.reuse_frozen_sites:
    # Caller-owned frozen sites are copied only after their source TAR equals the exact tag.
