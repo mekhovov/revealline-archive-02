@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce two immutable sites and assemble a strictly pinned archive; never freeze or tag."""
+"""Verify four immutable sites and assemble a strictly pinned archive; never freeze or tag."""
 import argparse,hashlib,json,os,re,shutil,stat,subprocess,tarfile,zipfile
 from pathlib import Path,PurePosixPath
 REPO=Path(__file__).resolve().parents[1]
@@ -29,11 +29,15 @@ def verify_directories(root,files):
    p=Path(directory)/name;require(p.is_dir() and not p.is_symlink(),"Non-ordinary artifact directory")
    actual.add(p.relative_to(root).as_posix())
  require(actual==expected,"Unexpected or missing artifact directory")
+def copy_frozen_site(original,site):
+ rows=scan(original);verify_directories(original,rows)
+ require(bool(rows),'Empty frozen site')
+ shutil.copytree(original,site)
 def write(p,value):
  p.parent.mkdir(parents=True,exist_ok=True)
  with p.open('x') as f:json.dump(value,f,indent=2,ensure_ascii=False);f.write('\n')
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--git-root',required=True);ap.add_argument('--builder-source',required=True);ap.add_argument('--out',required=True);ap.add_argument('--frozen-root');a=ap.parse_args()
+ ap=argparse.ArgumentParser();ap.add_argument('--git-root',required=True);ap.add_argument('--builder-source',required=True);ap.add_argument('--out',required=True);ap.add_argument('--frozen-root');ap.add_argument('--reuse-frozen-sites',action='store_true');a=ap.parse_args();require(not a.reuse_frozen_sites or a.frozen_root,'Frozen reuse requires --frozen-root')
  root=Path(a.git_root).resolve();source=Path(a.builder_source).resolve();out=Path(a.out).resolve();out.mkdir(parents=True,exist_ok=False)
  lock=json.loads((REPO/'source-lock.json').read_text());expectedRaw=(REPO/'expected-inventory.json').read_bytes();expected=json.loads(expectedRaw)
  require(H(expectedRaw)==lock['expectedInventorySha256'],'Expected inventory changed')
@@ -87,9 +91,14 @@ def main():
     dest.chmod(m.mode&0o777)
   sourceTree=git_files_equal(extracted,r['commit'])
   site=target/'site'
-  with (work/'build.stdout').open('xb') as stdout,(work/'build.stderr').open('xb') as stderr:
-   cmd=['node',str(extracted/'scripts/game-cli.mjs'),'build','--out',str(site),'--version',v,'--revision',r['commit']]
-   write(work/'build-command.json',cmd);subprocess.run(cmd,cwd=extracted,stdout=stdout,stderr=stderr,check=True)
+  if a.reuse_frozen_sites:
+   # Caller-owned frozen sites are copied only after their source TAR equals the exact tag.
+   # The same manifest, ZIP, loose-byte, accepted-inventory and post-run checks below remain mandatory.
+   copy_frozen_site(frozen/v/'site',site)
+  else:
+   with (work/'build.stdout').open('xb') as stdout,(work/'build.stderr').open('xb') as stderr:
+    cmd=['node',str(extracted/'scripts/game-cli.mjs'),'build','--out',str(site),'--version',v,'--revision',r['commit']]
+    write(work/'build-command.json',cmd);subprocess.run(cmd,cwd=extracted,stdout=stdout,stderr=stderr,check=True)
   manifestRaw=(site/'manifest.json').read_bytes();zipRaw=(site/'distribution.zip').read_bytes()
   require(H(manifestRaw)==record['manifestSha256'] and H(zipRaw)==record['distributionSha256'],'Fresh manifest/ZIP differs from frozen release')
   manifest=json.loads(manifestRaw);require(manifest['version']==v and manifest['sourceRevision']==r['commit'],'Manifest identity differs')
@@ -115,7 +124,7 @@ def main():
   actual=[{'path':f'releases/{v}/site/'+x['path'],'bytes':x['bytes'],'sha256':x['sha256']} for x in rows if x['path']!='distribution.zip']
   wanted=[x for x in expected['files'] if x['path'].startswith(f'releases/{v}/site/')]
   require(actual==wanted,'Rebuilt site differs from pinned accepted public inventory')
-  write(work/'site-inventory.json',rows);audits.append({'version':v,'commit':r['commit'],'sourceTree':sourceTree,'siteFiles':len(rows),'siteBytes':sum(x['bytes'] for x in rows),'manifestAssets':len(names),'zipMembers':len(entries),'record':record,'freshFrozenByteEquality':bool(frozen)})
+  write(work/'site-inventory.json',rows);audits.append({'version':v,'commit':r['commit'],'sourceTree':sourceTree,'siteFiles':len(rows),'siteBytes':sum(x['bytes'] for x in rows),'manifestAssets':len(names),'zipMembers':len(entries),'record':record,'frozenByteEquality':bool(frozen),'siteMode':'verified-frozen-copy' if a.reuse_frozen_sites else 'archived-cli-rebuild'})
  staged=project/'.cache/archive02';buildScript=out/'build.mjs'
  buildScript.write_text('import {buildPages} from '+json.dumps((source/'scripts/build-pages.mjs').as_uri())+';\nimport fs from "node:fs/promises";\nconst result=await buildPages('+json.dumps({'projectRoot':str(project),'repository':lock['sourceRepository'],'archivePlan':json.loads((REPO/'pages-archives.json').read_text()),'archiveId':'archive-02','outputDirectory':str(staged)})+');\nawait fs.writeFile('+json.dumps(str(out/'build.json'))+',JSON.stringify(result,null,2)+"\\n",{flag:"wx"});\n')
  with (out/'build.stdout').open('xb') as stdout,(out/'build.stderr').open('xb') as stderr:subprocess.run(['node',str(buildScript)],cwd=project,stdout=stdout,stderr=stderr,check=True)
@@ -129,6 +138,6 @@ def main():
  if frozen:
   after={v:scan(frozen/v) for v in selected};require(after==before,'Frozen releases changed');write(out/'frozen-after.json',after)
  write(out/'tags-after.json',tags());write(out/'inventory.json',expected)
- write(out/'receipt.json',{'passed':True,'sourceCommit':lock['sourceCommit'],'builderTree':builderTree,'archiveId':'archive-02','fileCount':len(actual),'totalBytes':expected['totalBytes'],'hiddenFiles':hidden,'inventorySha256':H(expectedRaw),'selected':audits,'allReleaseTagsUnchanged':True,'selectedFrozenTreesUnchanged':bool(frozen),'scope':'Local canonical rebuild/assembly only. No source edits, release creation, tag/ref mutation, repo publication, HTTP or browser execution.'})
+ write(out/'receipt.json',{'passed':True,'sourceCommit':lock['sourceCommit'],'builderTree':builderTree,'archiveId':'archive-02','fileCount':len(actual),'totalBytes':expected['totalBytes'],'hiddenFiles':hidden,'inventorySha256':H(expectedRaw),'selected':audits,'allReleaseTagsUnchanged':True,'selectedFrozenTreesUnchanged':bool(frozen),'siteMode':'verified-frozen-copy' if a.reuse_frozen_sites else 'archived-cli-rebuild','scope':'Local canonical verification/assembly only. No source edits, release creation, tag/ref mutation, repo publication, HTTP or browser execution.'})
  print(json.dumps({'passed':True,'files':len(actual),'bytes':expected['totalBytes'],'receipt':str(out/'receipt.json')}))
 if __name__=='__main__':main()
