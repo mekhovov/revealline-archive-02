@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify four immutable sites and assemble a strictly pinned archive; never freeze or tag."""
+"""Verify seven immutable sites and assemble a strictly pinned archive; never freeze or tag."""
 import argparse,hashlib,json,os,re,shutil,stat,subprocess,tarfile,zipfile
 from pathlib import Path,PurePosixPath
 REPO=Path(__file__).resolve().parents[1]
